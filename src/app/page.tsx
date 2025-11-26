@@ -1,14 +1,15 @@
 /* eslint-disable @next/next/no-img-element */
 "use client"
 
-import { useState, useRef } from "react"
-import { Upload, Lock, Unlock, Download, ImageIcon, RefreshCw, ArrowRight, Check } from "lucide-react"
+import { useState } from "react"
+import { Lock, Unlock, Download, ImageIcon, RefreshCw, ArrowRight, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
+import { FileUpload } from "@/components/ui/file-upload"
 import { encode, decode } from "@/lib/steganography"
 
 export default function SteganographyApp() {
@@ -28,26 +29,17 @@ export default function SteganographyApp() {
   const [decodedText, setDecodedText] = useState<string | null>(null)
   const [isDecoding, setIsDecoding] = useState(false)
 
-  const encodeFileInputRef = useRef<HTMLInputElement>(null)
-  const decodeFileInputRef = useRef<HTMLInputElement>(null)
-
-  const handleEncodeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      setEncodeFile(file)
-      setEncodePreview(URL.createObjectURL(file))
-      setStegoImage(null)
-      setEmbeddedText(null)
-    }
+  const handleEncodeFileSelect = (file: File) => {
+    setEncodeFile(file)
+    setEncodePreview(URL.createObjectURL(file))
+    setStegoImage(null)
+    setEmbeddedText(null)
   }
 
-  const handleDecodeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      setDecodeFile(file)
-      setDecodePreview(URL.createObjectURL(file))
-      setDecodedText(null)
-    }
+  const handleDecodeFileSelect = (file: File) => {
+    setDecodeFile(file)
+    setDecodePreview(URL.createObjectURL(file))
+    setDecodedText(null)
   }
 
   const handleEncode = async () => {
@@ -120,27 +112,19 @@ export default function SteganographyApp() {
                   <CardDescription>Select an image to hide your message in.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div 
-                    className="border-2 border-dashed border-muted-foreground/25 rounded-none hover:bg-muted/50 transition-colors cursor-pointer flex flex-col items-center justify-center h-48 md:h-64 relative overflow-hidden"
-                    onClick={() => encodeFileInputRef.current?.click()}
-                  >
-                    {encodePreview ? (
-                      <img src={encodePreview} alt="Preview" className="w-full h-full object-contain" />
-                    ) : (
-                      <div className="text-center p-4 text-muted-foreground">
-                        <Upload className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p>Click to upload image</p>
-                        <p className="text-xs opacity-50 mt-1">PNG, JPG supported</p>
-                      </div>
-                    )}
-                    <Input 
-                      type="file" 
-                      ref={encodeFileInputRef} 
-                      className="hidden" 
-                      accept="image/*" 
-                      onChange={handleEncodeFileChange} 
-                    />
-                  </div>
+                  <FileUpload
+                    onFileSelect={handleEncodeFileSelect}
+                    currentFile={encodeFile}
+                    previewUrl={encodePreview}
+                    onClear={() => {
+                      setEncodeFile(null)
+                      setEncodePreview(null)
+                      setStegoImage(null)
+                      setEmbeddedText(null)
+                    }}
+                    title="Drag & drop source image"
+                    description="PNG, JPG supported"
+                  />
                 </CardContent>
               </Card>
 
@@ -226,26 +210,18 @@ export default function SteganographyApp() {
                 <CardDescription>Upload an image containing a hidden message.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div 
-                  className="border-2 border-dashed border-muted-foreground/25 rounded-none hover:bg-muted/50 transition-colors cursor-pointer flex flex-col items-center justify-center h-48 md:h-64 relative overflow-hidden"
-                  onClick={() => decodeFileInputRef.current?.click()}
-                >
-                  {decodePreview ? (
-                    <img src={decodePreview} alt="Preview" className="w-full h-full object-contain" />
-                  ) : (
-                    <div className="text-center p-4 text-muted-foreground">
-                      <Upload className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>Click to upload stego-image</p>
-                    </div>
-                  )}
-                  <Input 
-                    type="file" 
-                    ref={decodeFileInputRef} 
-                    className="hidden" 
-                    accept="image/*" 
-                    onChange={handleDecodeFileChange} 
-                  />
-                </div>
+                <FileUpload
+                  onFileSelect={handleDecodeFileSelect}
+                  currentFile={decodeFile}
+                  previewUrl={decodePreview}
+                  onClear={() => {
+                    setDecodeFile(null)
+                    setDecodePreview(null)
+                    setDecodedText(null)
+                  }}
+                  title="Drag & drop stego-image"
+                  description="Upload the image with hidden message"
+                />
 
                 <div className="flex justify-center">
                   <Button 
